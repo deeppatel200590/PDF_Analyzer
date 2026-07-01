@@ -25,7 +25,8 @@ app.post('/upload', multer.single('file'), async(req, res) => {
                 mimeType: "application/pdf",
             }
         });
-        uploadfileid=file.name;
+        console.log(file);
+        uploadfileid=file.uri;
         console.log('File uploaded to Gemini:', uploadfileid);
         res.status(200).json({ message: 'success' });
     } catch (error) {
@@ -34,9 +35,25 @@ app.post('/upload', multer.single('file'), async(req, res) => {
     }
 });
 
-app.post('/chat',(req,res)=>{
-    const{question}=req.body;
-    res.json({ answer: `This is your question: ${question}` });
+app.post('/chat',async (req,res)=>{
+    try{
+        const{question}=req.body;
+        const response=await ai.models.generateContent({
+            model:"gemini-2.5-flash",
+            contents:[{
+                fileData:{
+                    fileUri:uploadfileid,
+                    mimeType:"application/pdf"
+                }
+            },{
+                text:question
+            }]
+        })
+        res.json({ answer:response.text});
+    } catch (error) {
+        console.error('Error in chat endpoint:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
 });
 
 app.listen(3000, () => {
