@@ -6,8 +6,17 @@ const Content = () => {
 
     const[file, setFile] = useState(null);
     const [isUploaded, setIsUploaded] = useState(false);
-    const [message, setMessage] = useState([]);
+    const [messages, setMessages] = useState([]);
     const [question, setQuestion] = useState('');
+
+    const sendquestion = async(e) => {
+        e.preventDefault();
+        if(question.trim() === '') return;
+        setMessages([...messages, { sender: 'user', text: question }]);
+        setQuestion('');
+        const res = await axios.post('http://localhost:3000/chat', { question });
+        setMessages((prev)=>[...prev, { sender: 'ai', text: res.data.answer }]);
+    }
 
     const send = async(e) => {
         e.preventDefault();
@@ -21,20 +30,20 @@ const Content = () => {
     }
 
     return (
-        <div className="flex-1 flex flex-col justify-center items-center">
+        <div className="flex-1 flex flex-col justify-center items-center overflow-auto">
         {isUploaded ? (
             <div className="w-full h-full flex flex-col">
 
                 <div className="flex-1 overflow-y-auto">
 
-                    {message.map((msg, index) => (
+                    {messages.map((msg, index) => (
                         <div key={index}>
                             {msg.text}
                         </div>
                     ))}
                 </div>
                 <div className='w-full p-4'>
-                    <form>
+                    <form onSubmit={sendquestion} className='flex items-center'>
                         <input
                             type="text"
                             placeholder="Ask anything about your PDF..."
